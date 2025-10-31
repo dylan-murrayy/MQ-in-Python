@@ -19,8 +19,6 @@ It includes two Python scripts:
   - Ensure /opt/mqm/bin is on PATH and /opt/mqm/lib64 on DYLD_LIBRARY_PATH (macOS)
 
 
-
-
 ## Setup
 
 1) Create Python environment
