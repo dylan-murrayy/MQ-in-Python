@@ -1,0 +1,30 @@
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:9.4.4.0-r1
+    platform: linux/amd64
+    container_name: mq-adv
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_DEV: "true"
+      MQ_CONNAUTH_USE_HTP: "true"
+    ports:
+      - "1414:1414"
+      - "9443:9443"
+    secrets:
+      - source: mqAdminPassword
+        target: mqAdminPassword
+      - source: mqAppPassword
+        target: mqAppPassword
+    volumes:
+      - mqdata:/mnt/mqm
+    shm_size: "256m"
+
+secrets:
+  mqAdminPassword:
+    environment: "adminpass"
+  mqAppPassword:
+    environment: "apppass"
+
+volumes:
+  mqdata:

@@ -1,0 +1,54 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.log
+
+# === Environments ===
+.env
+.venv/
+venv/
+ENV/
+env/
+mq/
+.mq_env/
+.DS_Store
+
+# === IDEs / Editors ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === IBM MQ Local Data ===
+mq-data/
+mnt/
+*.dat
+*.fdc
+*.trc
+*.log
+*.mqsc
+
+# === Podman / Docker ===
+podman-volumes/
+podman-machine/
+*.pid
+*.sock
+
+# === Credentials ===
+# Any local passwords or secrets
+*.secret
+*.pem
+*.crt
+*.key
+secrets/
+**/mqAdminPassword
+**/mqAppPassword
