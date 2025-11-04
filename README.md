@@ -1,4 +1,4 @@
-# 📨 IBM MQ in Python — Local Demo (Podman + ibmmq)
+# Run IBM MQ with Python MQI on macOS (Apple Silicon)
 
 A minimal working demo that connects a Python app to an IBM MQ Developer Edition queue manager running in a Podman container.
 It includes two Python scripts:
