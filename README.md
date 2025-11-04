@@ -1,55 +1,88 @@
-# Run IBM MQ with Python MQI on macOS (Apple Silicon)
+# Run IBM MQ with Python MQI on macOS (Apple Silicon)  
 
-A minimal working demo that connects a Python app to an IBM MQ Developer Edition queue manager running in a Podman container.
-It includes two Python scripts:
-- producer.py — puts messages on a queue
-- consumer.py — reads messages from the same queue
+Demonstrates the Point-to-Point Messaging pattern, a reliable, one-to-one message flow between a producer and a consumer via a queue.
 
+https://github.com/ibm-messaging/mq-mqi-python  
 
-## Prerequisites
+**Goal:** Run a local IBM MQ Developer Edition queue manager in a container on macOS (M1/M2) and connect to it using the official IBM MQ Python MQI (`ibmmq`) library.  
+This tutorial shows how to:
+- Run IBM MQ Developer Edition (9.4+) in Podman on macOS (Apple Silicon or Intel)
+- Connect to it from a Python app using the IBM MQ MQI (`ibmmq`) library
+- Send and receive messages programmatically
 
-- macOS or Linux with:
-  - Podman
-  - Python 3.10+
-  - Conda or venv for isolation
-- IBM MQ container image (Developer edition)
-- IBM MQ Toolkit on macOS (for the local Python MQI client):
-  - brew tap ibm-messaging/ibmmq
-  - brew install ibm-messaging/ibmmq/mqdevtoolkit
-  - Ensure /opt/mqm/bin is on PATH and /opt/mqm/lib64 on DYLD_LIBRARY_PATH (macOS)
+By the end, you’ll have a working producer and consumer written in Python communicating through a local MQ queue manager.
 
+---
 
-## Setup
+### Prerequisites
+- macOS 13 or later (Intel or Apple Silicon)  
+- Podman 5.x  
+- Homebrew  
+- Python 3.10+ (Conda, pyenv, or system Python are all fine)
 
-1) Create Python environment
+---
 
+### Step 1 — Install the IBM MQ client toolkit  
+The Python MQI library needs the MQ C client libraries installed locally.
+
+```bash
+brew tap ibm-messaging/ibmmq
+brew install ibmmq-client
+```
+
+Then verify the toolkit is available:
+
+```bash
+ls /opt/mqm/lib64
+```
+
+If you see `libmqic_r.dylib` and similar libraries, you’re good.
+
+---
+
+### Step 2 — Create and activate a Python environment
+
+```bash
 conda create -n mq python=3.10 -y
 conda activate mq
-pip install -r requirements.txt
+pip install ibmmq
+```
 
-(Or: python -m venv venv && source venv/bin/activate)
+---
 
-2) Initialize Podman (macOS first-time users)
+### Step 3 — Initialize a Podman machine  
+Apple Silicon uses a Linux VM under the hood.  
+Create and start it once:
 
-podman machine init --memory 4096 --disk-size 30
+```bash
+podman machine init --cpus 4 --memory 4096 --disk-size 30
 podman machine start
-podman info   # should print info without socket errors
+podman info
+```
 
-3) Create MQ Secrets (stored in Podman, not in git)
+---
 
+### Step 4 — Create MQ secrets for the app and admin user
+
+```bash
 printf 'adminpass' | podman secret create mqAdminPassword -
-printf 'apppass'  | podman secret create mqAppPassword  -
+printf 'apppass'  | podman secret create mqAppPassword -
+```
+
+List to confirm:
+
+```bash
 podman secret ls
+```
 
-You should see:
-mqAdminPassword
-mqAppPassword
+You should see both secrets listed.
 
-4) Start IBM MQ Advanced Developer container
+---
 
-Recommended on macOS: use a named volume (avoids virtiofs issues with bind mounts). Apple Silicon users: force amd64 platform.
+### Step 5 — Run the MQ Developer Edition container  
+Create and run the queue manager (`QM1`) with the developer configuration.
 
-podman volume create mqdata
+```bash
 podman run -d \
   --name mq-adv \
   --platform linux/amd64 \
@@ -63,31 +96,66 @@ podman run -d \
   --volume mqdata:/mnt/mqm \
   --shm-size=256m \
   icr.io/ibm-messaging/mq:9.4.4.0-r1
+```
 
-Wait until logs show the web server is ready and QM1 is started:
+Then check that it’s up:
 
-podman logs -f mq-adv
+```bash
+podman ps
+podman logs -f mq-adv | grep "Web application available"
+```
 
-IBM MQ Console:
-https://localhost:9443/ibmmq/console
-Login: admin / adminpass
+Once you see `QM1 started` and `mqweb server is ready`, you can open the MQ Console:  
+🔗 https://localhost:9443/ibmmq/console
 
+Login with:  
+User: `admin`  
+Password: `adminpass`
 
+---
 
-## Run the Demo
+### Step 6 — Test Python connectivity  
+In your `MQ-in-Python` directory, create the following two scripts:  
+`producer.py`  
+`consumer.py`
 
-Terminal A — start consumer (waited gets):
+---
 
+### Step 7 — Run the demo  
+
+Start the consumer first:
+
+```bash
 python consumer.py
+```
 
-Terminal B — send 5 persistent messages:
+In another terminal, send messages:
 
-python producer.py -n 5 -p
+```bash
+python producer.py
+```
 
-Environment variables (optional) to override defaults:
+Expected output (producer):
 
-MQ_QMGR=QM1 MQ_CONN=localhost(1414) MQ_CHANNEL=DEV.APP.SVRCONN MQ_QUEUE=DEV.QUEUE.1 \
-MQ_USER=app MQ_PASSWORD=apppass python producer.py
+```
+PUT: hello from python 1 @ 1761913992.200
+...
+✅ done
+```
+
+Expected output (consumer):
+
+```
+GET: hello from python 1 @ 1761913992.200
+GET: hello from python 2 @ 1761913992.256
+...
+```
+
+🎉 **You’re done!**
+
+You now have:
+- A working IBM MQ Developer queue manager running in Podman  
+- A Python MQI client successfully connecting, putting, and getting messages
 
 
 
