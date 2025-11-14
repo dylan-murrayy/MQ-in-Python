@@ -1,4 +1,4 @@
-# Run IBM MQ with Python MQI on macOS (Apple Silicon)  
+# [DRAFT] Run IBM MQ with Python MQI on macOS (Apple Silicon)  
 
 Demonstrates the Point-to-Point Messaging pattern, a reliable, one-to-one message flow between a producer and a consumer via a queue.
 
@@ -134,9 +134,7 @@ podman logs -f mq-adv | grep "Web application available"
 Once you see `QM1 started` and `mqweb server is ready`, you can open the MQ Console:  
 🔗 https://localhost:9443/ibmmq/console
 
-Login with:  
-User: `admin`  
-Password: `adminpass`
+
 
 #### Recap: What was created?
 
@@ -160,8 +158,15 @@ This helps you connect the Python examples back to the objects you saw in the IB
 Navigate to: https://localhost:9443/ibmmq/console
 
 
+**Login with:** 
+User: `admin`  
+Password: `adminpass`
+
 Your browser will warn about an unsafe connection — this is expected because the queue manager uses a **self-signed certificate**.  
 Accept the warning to continue.
+
+<img src="photos/login.png" width="600">
+
 
 Log in with:
 
@@ -175,6 +180,9 @@ You can change the password later if you want.
 #### 2. View queue manager **QM1**
 
 From the Home page, click **Manage**, then select **QM1**.
+
+<img src="photos/console-home.png" width="600">
+
 
 Here you can see:
 
@@ -196,6 +204,8 @@ This is the queue your Python scripts will:
 - **PUT** messages to (producer)  
 - **GET** messages from (consumer)
 
+<img src="photos/create-queue2.png" width="600">
+
 From this page, you can:
 
 - View existing messages  
@@ -205,9 +215,12 @@ From this page, you can:
 Try clicking **Create** to add a message.  
 You’ll see it appear immediately in the message list.
 
+<img src="photos/add-msg2.png" width="600">
+
+
 ---
 
-### Step 6 — Test Python connectivity  
+### Step 8 — Test Python connectivity  
 
 Now that you’ve seen the queue and channel in the MQ Console, you’ll connect to them from Python.
 
@@ -216,20 +229,9 @@ In your `MQ-in-Python` directory, create two scripts:
 - `producer.py` → PUT messages to **DEV.QUEUE.1**
 - `consumer.py` → GET messages from **DEV.QUEUE.1**
 
-Both scripts use the same MQ connection parameters:
-
-```python
-queue_manager = "QM1"
-channel = "DEV.APP.SVRCONN"
-queue_name = "DEV.QUEUE.1"
-conn_info = "localhost(1414)"
-
-If you followed the earlier steps, these objects already exist inside your queue manager.
 
 
----
-
-### Step 7 — Run the demo  
+### Step 9 — Run the demo  
 
 Start the consumer first:
 
