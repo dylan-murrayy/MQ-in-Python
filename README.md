@@ -278,18 +278,6 @@ You now have:
 
 
 
-
-## Inspect MQ directly
-
-Show current queue depth from inside the container:
-
-podman exec -it mq-adv runmqsc QM1 <<'EOF'
-dis ql(DEV.QUEUE.1) curdepth
-end
-EOF
-
-
-
 ## Cleanup
 
 Stop and remove the container and secrets:
