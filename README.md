@@ -62,6 +62,8 @@ The Python MQI library links to these C libraries. Without them, the Python clie
 
 ### Step 2 — Create and activate a Python environment
 
+e.g. with conda 
+
 ```bash
 conda create -n mq python=3.10 -y
 conda activate mq
@@ -179,7 +181,7 @@ You can change the password later if you want.
 
 #### 2. View queue manager **QM1**
 
-From the Home page, click **Manage**, then select **QM1**.
+From the Home page, click **Manage QM1**.
 
 <img src="photos/console-home.png" width="600">
 
@@ -190,8 +192,6 @@ Here you can see:
 - Queues, channels, and listeners  
 - Configuration details  
 - Monitoring and usage statistics  
-
-This matches the object model you learned in the MQ Fundamentals material.
 
 ---
 
@@ -218,48 +218,44 @@ You’ll see it appear immediately in the message list.
 <img src="photos/add-msg2.png" width="600">
 
 
----
+Back in another terminal
 
-### Step 8 — Test Python connectivity  
-
-Now that you’ve seen the queue and channel in the MQ Console, you’ll connect to them from Python.
-
-In your `MQ-in-Python` directory, create two scripts:
-
-- `producer.py` → PUT messages to **DEV.QUEUE.1**
-- `consumer.py` → GET messages from **DEV.QUEUE.1**
-
-
-
-### Step 9 — Run the demo  
-
-Start the consumer first:
+Start the consumer:
 
 ```bash
 python consumer.py
 ```
 
-In another terminal, send messages:
+You should see the message come in!
+
+expected output:
+
+```bash
+Connecting to QM1 via DEV.APP.SVRCONN@localhost(1414) as app …
+Waiting for messages on DEV.QUEUE.1 (timeout 5000 ms). Ctrl+C to stop.
+GET #1: Hello world!  (MsgId=)
+```
+
+You can also use the producer.py file to add messages to the queue:
 
 ```bash
 python producer.py
 ```
+expected output:
 
-Expected output (producer):
+```bash
+Connecting to QM1 via DEV.APP.SVRCONN@localhost(1414) as app …
+PUT: msg 1/5 @ 1763131487.491  (MsgId=414d5120514d31202020202020202020ce3d176901760040)
+PUT: msg 2/5 @ 1763131487.550  (MsgId=414d5120514d31202020202020202020ce3d176902760040)
+PUT: msg 3/5 @ 1763131487.607  (MsgId=414d5120514d31202020202020202020ce3d176903760040)
+PUT: msg 4/5 @ 1763131487.663  (MsgId=414d5120514d31202020202020202020ce3d176904760040)
+PUT: msg 5/5 @ 1763131487.719  (MsgId=414d5120514d31202020202020202020ce3d176905760040)
+```
 
-```
-PUT: hello from python 1 @ 1761913992.200
-...
-✅ done
-```
+Then go back to the console to check if the messages arrive :) 
 
-Expected output (consumer):
 
-```
-GET: hello from python 1 @ 1761913992.200
-GET: hello from python 2 @ 1761913992.256
-...
-```
+---
 
 
 **What’s happening behind the scenes**
@@ -318,14 +314,16 @@ EOF
 
 Stop and remove the container and secrets:
 
+```bash
 podman stop mq-adv
 podman rm mq-adv
 podman secret rm mqAdminPassword mqAppPassword
+```
 
 (Optional) remove the named volume:
 
+```bash
 podman volume rm mqdata
-
-
+```
 
 
