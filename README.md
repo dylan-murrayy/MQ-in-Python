@@ -276,26 +276,6 @@ You now have:
 - A Python MQI client successfully connecting, putting, and getting messages
 
 
-## Troubleshooting
-
-- Cannot connect to Podman / socket errors:
-  - Run: podman machine start
-  - Then: podman info
-- 2035 NOT_AUTHORIZED in Python:
-  - Ensure you created secrets mqAdminPassword and mqAppPassword
-  - Container must be started with MQ_CONNAUTH_USE_HTP=true
-  - Use user=app password=apppass and channel DEV.APP.SVRCONN
-- 2059 / 2538 (connectivity):
-  - Confirm container is Up and port 1414 is published
-  - Use localhost(1414) and channel DEV.APP.SVRCONN
-- Queue open errors (2037):
-  - Open the queue with input and/or output flags as needed
-- Field/keyword errors in ibmmq:
-  - GMO/PMO fields are CamelCase (Options, WaitInterval, Persistence)
-  - Queue.put()/get() often require positional args, not keywords
-- Apple Silicon:
-  - Use --platform linux/amd64 on pull/run
-  - If your Podman version lacks --arch on machine init, just use --platform on the container
 
 
 
