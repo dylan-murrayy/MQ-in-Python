@@ -2,11 +2,26 @@
 
 Demonstrates the Point-to-Point Messaging pattern, a reliable, one-to-one message flow between a producer and a consumer via a queue.
 
+📌 This assumes you have completed IBM’s MQ Fundamentals learning path 
+
+https://developer.ibm.com/learningpaths/ibm-mq-badge/mq-fundamentals/
+
+This tutorial picks up right after the concepts you learned there.
+You already know what queue managers, queues, channels and listeners are.
+
+Here you’ll create your own local Developer Edition queue manager in a container and connect to it from Python using the MQI.
+
+It’s the practical next step: take the point-to-point pattern you saw conceptually and run it end-to-end on your Mac.
+
 https://github.com/ibm-messaging/mq-mqi-python  
 
-**Goal:** Run a local IBM MQ Developer Edition queue manager in a container on macOS (M1/M2) and connect to it using the official IBM MQ Python MQI (`ibmmq`) library.  
+**Goal:** Run a local IBM MQ Developer Edition queue manager in a container on macOS arm64, and connect to it using the official IBM MQ Python MQI (`ibmmq`) library.  
+
 This tutorial shows how to:
 - Run IBM MQ Developer Edition (9.4+) in Podman on macOS (Apple Silicon or Intel)
+- It will expose:
+  - Port 1414 → MQ listener for applications
+  - Port 9443 → MQ Console (web UI)
 - Connect to it from a Python app using the IBM MQ MQI (`ibmmq`) library
 - Send and receive messages programmatically
 
@@ -38,6 +53,11 @@ ls /opt/mqm/lib64
 
 If you see `libmqic_r.dylib` and similar libraries, you’re good.
 
+
+**Why this matters:**
+The Python MQI library links to these C libraries. Without them, the Python client cannot connect to a queue manager.
+
+
 ---
 
 ### Step 2 — Create and activate a Python environment
@@ -47,6 +67,8 @@ conda create -n mq python=3.10 -y
 conda activate mq
 pip install ibmmq
 ```
+**Why this matters:**
+This isolates the MQ Python dependencies and ensures you’re using the correct MQI bindings.
 
 ---
 
@@ -59,6 +81,7 @@ podman machine init --cpus 4 --memory 4096 --disk-size 30
 podman machine start
 podman info
 ```
+
 
 ---
 
@@ -76,6 +99,9 @@ podman secret ls
 ```
 
 You should see both secrets listed.
+
+**Why this matters:**
+These credentials populate admin (MQ Console) and app (client application) accounts for the developer configuration.
 
 ---
 
@@ -112,12 +138,94 @@ Login with:
 User: `admin`  
 Password: `adminpass`
 
+#### Recap: What was created?
+
+| MQ object         | Name              | Purpose                                                 |
+| ----------------- | ----------------- | ------------------------------------------------------- |
+| **Queue manager** | `QM1`             | The central MQ server process                           |
+| **Listener**      | Port `1414`       | Accepts client connections                              |
+| **App channel**   | `DEV.APP.SVRCONN` | Client apps connect over this                           |
+| **Default queue** | `DEV.QUEUE.1`     | Your producer will PUT messages here; consumer will GET |
+| **MQ Console**    | Port `9443`       | Web UI for inspecting the queue manager                 |
+
+
+---
+
+### Step 7 — Explore the queue manager using MQ Console  
+
+Now that QM1 is running, you can inspect its queues, channels, and messages using the IBM MQ Console.
+This helps you connect the Python examples back to the objects you saw in the IBM MQ Fundamentals path.
+
+#### 1. Open the Console  
+Navigate to: https://localhost:9443/ibmmq/console
+
+
+Your browser will warn about an unsafe connection — this is expected because the queue manager uses a **self-signed certificate**.  
+Accept the warning to continue.
+
+Log in with:
+
+- **User:** `admin`
+- **Password:** the value of your `mqAdminPassword` secret
+
+You can change the password later if you want.
+
+---
+
+#### 2. View queue manager **QM1**
+
+From the Home page, click **Manage**, then select **QM1**.
+
+Here you can see:
+
+- Queue manager status  
+- Queues, channels, and listeners  
+- Configuration details  
+- Monitoring and usage statistics  
+
+This matches the object model you learned in the MQ Fundamentals material.
+
+---
+
+#### 3. Inspect the queue you’ll use in Python
+
+Go to **Queues** → choose **DEV.QUEUE.1**.
+
+This is the queue your Python scripts will:
+
+- **PUT** messages to (producer)  
+- **GET** messages from (consumer)
+
+From this page, you can:
+
+- View existing messages  
+- Create a test message  
+- See message details (payload + MQMD metadata)
+
+Try clicking **Create** to add a message.  
+You’ll see it appear immediately in the message list.
+
 ---
 
 ### Step 6 — Test Python connectivity  
-In your `MQ-in-Python` directory, create the following two scripts:  
-`producer.py`  
-`consumer.py`
+
+Now that you’ve seen the queue and channel in the MQ Console, you’ll connect to them from Python.
+
+In your `MQ-in-Python` directory, create two scripts:
+
+- `producer.py` → PUT messages to **DEV.QUEUE.1**
+- `consumer.py` → GET messages from **DEV.QUEUE.1**
+
+Both scripts use the same MQ connection parameters:
+
+```python
+queue_manager = "QM1"
+channel = "DEV.APP.SVRCONN"
+queue_name = "DEV.QUEUE.1"
+conn_info = "localhost(1414)"
+
+If you followed the earlier steps, these objects already exist inside your queue manager.
+
 
 ---
 
@@ -151,12 +259,23 @@ GET: hello from python 2 @ 1761913992.256
 ...
 ```
 
+
+**What’s happening behind the scenes**
+
+Your Python scripts:
+
+1. Connect to queue manager QM1
+2. Use channel DEV.APP.SVRCONN for client access
+3. Send and receive messages on DEV.QUEUE.1
+4. Use port 1414 to communicate with the MQ listener you saw running in the container
+
+You’ve just exercised the exact point-to-point pattern introduced in the MQ Fundamentals path, but now running fully on your Mac using real MQ code.
+
 🎉 **You’re done!**
 
 You now have:
 - A working IBM MQ Developer queue manager running in Podman  
 - A Python MQI client successfully connecting, putting, and getting messages
-
 
 
 ## Troubleshooting
@@ -207,24 +326,4 @@ podman volume rm mqdata
 
 
 
-## Requirements
 
-requirements.txt should contain:
-ibmmq>=2.3.0
-
-
-
-## Security / Git Hygiene
-
-- Do not commit secrets or local MQ data.
-- .gitignore should exclude:
-  - mq-data/, *.fdc, *.trc, *.log
-  - __pycache__/, *.pyc, .DS_Store
-  - venv/, .venv/, .idea/, .vscode/
-  - any files named mqAdminPassword or mqAppPassword
-
-
-
-## License
-
-The Python demo code can be MIT-licensed. IBM MQ is licensed separately under the IBM MQ Advanced for Developers terms.
